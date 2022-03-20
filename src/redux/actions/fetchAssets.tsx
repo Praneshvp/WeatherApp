@@ -1,7 +1,7 @@
-import { Alert } from "react-native"
 import Types from "../types/types"
+import SQLite from 'react-native-sqlite-2'
 
-
+const db = SQLite.openDatabase('local.db', '1.0', '', 1)
 
 export function isLoading(bool: boolean) {
   return {
@@ -10,9 +10,9 @@ export function isLoading(bool: boolean) {
   }
 }
 
-export function successfulFetch(data, count ) {
+export function successfulFetch(data: any) {
   return {
-    type: count === 5 ? Types.FETCH_ASSETS_CAROUSAL : Types.FETCH_ASSETS_GRID,
+    type: Types.FETCH_ASSETS_GRID,
     data
   }
 }
@@ -26,50 +26,68 @@ export function fetchError(error: any) {
 }
 
 
-export  function fetchImages(count) {
+export function fetchDetails(network: any) {
   return async dispatch => {
 
-    try {
+    if (network) {
+      try {
 
-      dispatch(isLoading(true))
+        dispatch(isLoading(true))
 
+        const response = await fetch(`https://api.openweathermap.org/data/2.5/forecast?q=M%C3%BCnchen,DE&appid=92d7b81b099d57154bd55d9472884403`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
 
-      const response = await fetch(`https://shibe.online/api/shibes?count=${count}&urls=true&httpsUrls=true`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
+        const resData = await response.json();
 
-      const resData = await response.json();
-        let string = JSON.stringify(resData)
-        string = string.substring(1, string.length - 1);
-        let arr = string.split(',')
-        // console.log("result",arr)
-        let newArr = []
-        for(let i = 0 ; i<arr.length ; i++){
-          newArr.push({id:i, image: arr[i].substring(1, arr[i].length - 1)})
-        }
-        // console.log("newArr",newArr)
-         dispatch(successfulFetch(newArr, count))
-         dispatch(isLoading(false))
+        db.transaction(function (txn) {
+          txn.executeSql('DROP TABLE IF EXISTS WeatherDetails', [])
+          txn.executeSql(
+            'CREATE TABLE IF NOT EXISTS WeatherDetails(id INTEGER PRIMARY KEY NOT NULL, temp VARCHAR(30), date_txt VARCHAR(30))',
+            []
+          )
 
+          let arr = []
+          arr = resData.list
+          for (let i = 0; i < arr.length; i++) {
+            // console.log("result",arr[i])
+            txn.executeSql(
+              'INSERT INTO WeatherDetails (id, temp, date_txt) VALUES (?,?,?)',
+              [i, arr[i].main.temp, arr[i].dt_txt],
+              (txn, results) => {
+                if (results.rowsAffected > 0) {
+                  //  console.log('Data Inserted Successfully....');
+                } else console.log('Error');
+              }
+            );
+          }
 
-    } catch (error) {
-      dispatch(isLoading(false))
-      Alert.alert(
-        //title
-        '',
-        //body
-        'Error',
-        [
-            {
-                text: 'OK', onPress: () => {
-                }
-            },
-        ],
-        { cancelable: false }
-    )    }
+          txn.executeSql('SELECT * FROM `WeatherDetails`', [], function (tx, res) {
+            // console.log('item:', res.rows._array)
+            dispatch(successfulFetch(res.rows._array))
+            dispatch(isLoading(false))
+          })
+        })
+
+      }
+
+      catch (error) {
+        dispatch(isLoading(false))
+      }
+    }
+    //if no network
+    else {
+      db.transaction(function (txn) {
+        txn.executeSql('SELECT * FROM `WeatherDetails`', [], function (tx, res) {
+          console.log('item:', res.rows._array)
+          dispatch(successfulFetch(res.rows._array))
+          dispatch(isLoading(false))
+        })
+      })
+    }
   }
 
 }

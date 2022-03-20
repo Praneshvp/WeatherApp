@@ -2,8 +2,7 @@ import Types from "../types/types";
 
 const INITIAL_STATE = {
   isLoading: true,
-  gridAssets: [],
-  carousalAssets: [],
+  weatherDetails: [],
   error: null
 }
 
@@ -16,17 +15,10 @@ export default function imageReducer(state = INITIAL_STATE, action) {
         isLoading: action.isLoading,
       }
       break;
-    case Types.FETCH_ASSETS_CAROUSAL:
-     
-      return {
-        ...state,
-        carousalAssets: action.data,
-      }
-      break;
     case Types.FETCH_ASSETS_GRID:
       return {
         ...state,
-        gridAssets: action.data,
+        weatherDetails: action.data,
       }
       break;
     case Types.ERROR:
