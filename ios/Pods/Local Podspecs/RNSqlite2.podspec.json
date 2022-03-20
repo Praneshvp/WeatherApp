@@ -1,0 +1,25 @@
+{
+  "name": "RNSqlite2",
+  "version": "3.5.2",
+  "summary": "SQLite Storage for React Native",
+  "homepage": "https://github.com/craftzdog/react-native-sqlite-2#readme",
+  "license": "Apache-2.0",
+  "authors": "Takuya Matsuyama <hi@craftz.dog> (https://github.com/craftzdog)",
+  "platforms": {
+    "ios": "10.0",
+    "osx": "10.14",
+    "tvos": "10.0"
+  },
+  "source": {
+    "git": "https://github.com/craftzdog/react-native-sqlite-2.git",
+    "tag": "master"
+  },
+  "source_files": "**/*.{h,m}",
+  "requires_arc": true,
+  "libraries": "sqlite3",
+  "dependencies": {
+    "React-Core": [
+
+    ]
+  }
+}
